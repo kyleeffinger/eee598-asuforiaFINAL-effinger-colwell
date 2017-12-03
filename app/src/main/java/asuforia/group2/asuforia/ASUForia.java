@@ -54,7 +54,7 @@ public class ASUForia {
 
         // Call nativeFeatureDetection() to get features for reference image. Returned reference points need to be saved
         //TODO: Fix this method!
-//        nativeFeatureDetection(referenceImage);
+        nativeFeatureDetection(referenceImage);
 
 
     }
