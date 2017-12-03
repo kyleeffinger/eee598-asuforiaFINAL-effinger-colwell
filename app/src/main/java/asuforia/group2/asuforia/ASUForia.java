@@ -3,6 +3,7 @@ package asuforia.group2.asuforia;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -16,6 +17,7 @@ import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.OrientationEventListener;
@@ -28,10 +30,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-/**
- * Created by kyleeffinger on 12/2/17.
- */
 
 public class ASUForia {
 
@@ -54,7 +52,7 @@ public class ASUForia {
 
         // Call nativeFeatureDetection() to get features for reference image. Returned reference points need to be saved
         //TODO: Fix this method!
-        nativeFeatureDetection(referenceImage);
+//        nativeFeatureDetection(referenceImage);
 
 
     }
@@ -84,7 +82,6 @@ public class ASUForia {
 
     // Instantiate TextureView object
     private TextureView myTextureView;
-
 
 
     /*************************************** Begin startEstimation() ************************************/
@@ -133,6 +130,7 @@ public class ASUForia {
      * then return a rotation and translation vector, that we will then pass to the PoseListener defined in MainActivity.
      * The PoseListener callback method onPose() will then use these vectors to draw a cube on the camera image.
      */
+
     // Instantiate ImageReader.OnImageAvailableListener object
     private final ImageReader.OnImageAvailableListener myImageAvailableListener
             = new ImageReader.OnImageAvailableListener() {
@@ -140,6 +138,11 @@ public class ASUForia {
         // Define what happens when a new (preview) frame is available from the camera
         @Override
         public void onImageAvailable(ImageReader imageReader) {
+
+
+
+
+
 
             //TODO: Call nativePoseEstimation() to get rotation and translation (R and T) vectors
 
@@ -302,6 +305,11 @@ public class ASUForia {
                 }
                 // get list of available resolutions from CameraCharacteristics
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+                ImageReader myImageReader = ImageReader.newInstance(myTextureView.getWidth(), myTextureView.getHeight(),
+                        ImageFormat.YUV_420_888, 2);
+
+                myImageReader.setOnImageAvailableListener(myImageAvailableListener, myBackgroundHandler);
 
                 // Get device orientation
                 int deviceOrientation = myAct.getWindowManager().getDefaultDisplay().getRotation();
