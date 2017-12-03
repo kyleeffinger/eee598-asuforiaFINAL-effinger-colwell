@@ -85,14 +85,19 @@ public class ASUForia {
 
 
     /*************************************** Begin startEstimation() ************************************/
-    //TODO: Create startEstimation() that will setup and open the camera
-    public void startEstimation(TextureView myTextureView) {
-        this.myTextureView = myTextureView;
-        // Start background thread
-        startBackgroundThread();
 
-        // Assign our TextureView the correct cameraPreview
-        //myTextureView = (TextureView) findViewById(R.id.cameraPreview);
+    /**
+    startEstimation() is used to connect to the camera hardware and setup the camera to collect images in the format we
+     want. This is defined in ASUForia.java so that from the MainActivity, a developer would simply need to call this
+     one method and the camera and feature detection would be all taken care of, simplifying the process to use the lib.
+     */
+    // startEstimation() definition, with TextureView being passed from MainActivity to be able to give the camera
+    // methods the TextureView they need to setup the camera pipeline.
+    public void startEstimation(TextureView myTextureView) {
+        // Set myTextureView = the Texture View being passed from MainActivity
+        this.myTextureView = myTextureView;
+        // Start background thread to handle camera tasks
+        startBackgroundThread();
 
         // See if our TextureView is available
         if (myTextureView.isAvailable()) {
@@ -104,8 +109,6 @@ public class ASUForia {
         else {
             myTextureView.setSurfaceTextureListener(mySurfaceTextureListener);
         }
-
-
 
         // Nothing else to do in this function - linked to onImageAvailable() by setupCamera() and connectCamera()
 
@@ -138,10 +141,6 @@ public class ASUForia {
         // Define what happens when a new (preview) frame is available from the camera
         @Override
         public void onImageAvailable(ImageReader imageReader) {
-
-
-
-
 
 
             //TODO: Call nativePoseEstimation() to get rotation and translation (R and T) vectors
