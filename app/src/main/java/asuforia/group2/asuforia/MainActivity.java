@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
      * app comes to the foreground and ends when the app goes to the background.
      */
 
+    // Instantiate objects outside of methods for use across multiple callbacks
     ASUForia asuforia;
     TextureView myTextureView;
     Bitmap bmpIn;
@@ -65,9 +66,6 @@ public class MainActivity extends AppCompatActivity {
 
         //TODO: Implement this in C++ - nativeFeatureDetection()
 
-//        Mat mat = new Mat(bmpIn.getHeight(), bmpIn.getWidth(), CvType.CV_8UC3);
-//        Utils.bitmapToMat(bmpIn, mat);
-
         // This will probably need to be Texture instead of Surface since we are using TextureView. "Whatever it needs
         // to be for it to work is fine" -Robert
         Surface cameraSurface = null; // can change to texture if needed
@@ -79,9 +77,6 @@ public class MainActivity extends AppCompatActivity {
        "public native String nativeFeatureDetection();". Then, once in C++, Bitmap can be converted to Mat. OpenCV will
        need to use Mat data type for all methods.
         */
-
-
-
     }
 
     // Define what happens when our application enters and stays in the foreground
@@ -90,11 +85,11 @@ public class MainActivity extends AppCompatActivity {
         // call super constructor in order to apply onResume() to entire Activity
         super.onResume();
 
-        //TODO: Call startEstimation() to setup camera and pass to onImageAvailable to nativePoseEstimation() to onPose()
         // startEstimation() only needs to be called here since onResume() will be called when the application
         // is first opened, and every time the app is brought into the foreground.
         myTextureView = (TextureView) findViewById(R.id.cameraPreview);
 
+        // Setup the camera and display preview on TextureView
         asuforia.startEstimation(myTextureView);
     }
 
@@ -106,11 +101,8 @@ public class MainActivity extends AppCompatActivity {
         // Call super constructor to apply to entire activity
         super.onPause();
 
-        //TODO: Call endEstimation() to stop the camera and free resources when camera is not visible
+        // stop the camera and free resources when camera is not visible
         asuforia.endEstimation();
-
     }
-
     /********************************* End of Activity Lifecycle *******************************************/
-
 }

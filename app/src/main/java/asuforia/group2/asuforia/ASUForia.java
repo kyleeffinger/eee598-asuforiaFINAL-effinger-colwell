@@ -43,8 +43,6 @@ public class ASUForia {
         System.loadLibrary("group2");
     }
 
-    private PoseListener mylistener;
-    private Activity myAct;
     /*************************************** ASUForia Constructor ***************************************/
     ASUForia(PoseListener listener_arg, Bitmap referenceImage, Surface cameraSurface, Activity act) {
         mylistener = listener_arg;
@@ -63,6 +61,12 @@ public class ASUForia {
      * the sake of readability in these methods, the single-line object instantiations are collected here, with a
      * single line comment meant to give a general idea of how the object will be used.
      */
+
+    // instantiate a PoseListener object that can be assigned within the ASUForia constructor
+    private PoseListener mylistener;
+
+    // instantiate an Activity object to be assigned within the ASUForia constructor after being passed from MainActivity
+    private Activity myAct;
 
     // Background Handler and HandlerThread for processing camera tasks behind UI, to keep UI seamless
     private HandlerThread myBackgroundHandlerThread;
@@ -90,6 +94,7 @@ public class ASUForia {
     startEstimation() is used to connect to the camera hardware and setup the camera to collect images in the format we
      want. This is defined in ASUForia.java so that from the MainActivity, a developer would simply need to call this
      one method and the camera and feature detection would be all taken care of, simplifying the process to use the lib.
+     This method will be called when the application comes to the foreground.
      */
     // startEstimation() definition, with TextureView being passed from MainActivity to be able to give the camera
     // methods the TextureView they need to setup the camera pipeline.
@@ -156,14 +161,17 @@ public class ASUForia {
 
 
     /*************************************** Begin endEstimation() **************************************/
-    //TODO: Create endEstimation() that will close the camera
-    public void endEstimation() {
 
+    /**
+    endEstimation() is used to close out the camera resources. This method is called when the application goes into the
+     background. The only items that need to be closed out are the BackgroundThread and camera, which are closed with
+     a call to their respective methods.
+     */
+    public void endEstimation() {
         // stop background thread
         stopBackgroundThread();
         // Close the camera being used
         closeCamera();
-
     }
     /*************************************** End endEstimation() ****************************************/
 
@@ -248,10 +256,6 @@ public class ASUForia {
 
             // For initial troubleshooting purposes. Display success message when camera is opened
 //            Toast.makeText(getApplicationContext(), "Camera connection success!", Toast.LENGTH_SHORT).show();
-
-            // When the camera opens, we also want to prove that OpenCV has compiled correctly, so we display the
-            // OpenCV VERSION string gathered above and use Toast to display it on the screen temporarily.
-//            Toast.makeText(getApplicationContext(), version, Toast.LENGTH_LONG).show();
         }
 
         // Define what happens when the camera is closed (disconnected)
@@ -284,6 +288,12 @@ public class ASUForia {
     }
 
 
+    /**
+    setupCamera() is the method used to find the CameraID's of the physical camera devices on the tablet, and ensure
+     that the correct camera is being used. In this case, the rear camera is the desired camera. This method also sets
+     the ImageFormat, using the ImageReader class. This format is used because it provides better performance for
+     computationally intensive image tasks, such as OpenCV. This format is then linked to the ImageAvailableListener.
+     */
     private void setupCamera(int width, int height) {
         /*
         Connect CameraManager object to device camera service in order to get information
@@ -305,9 +315,11 @@ public class ASUForia {
                 // get list of available resolutions from CameraCharacteristics
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
+                // Use ImageReader class to create a new ImageReader instance and set the size and format of the image
                 ImageReader myImageReader = ImageReader.newInstance(myTextureView.getWidth(), myTextureView.getHeight(),
                         ImageFormat.YUV_420_888, 2);
 
+                // connect our ImageReader to our ImageAvailableListener and Handler
                 myImageReader.setOnImageAvailableListener(myImageAvailableListener, myBackgroundHandler);
 
                 // Get device orientation
@@ -318,14 +330,18 @@ public class ASUForia {
                 // Check if in landscape orientation
                 boolean swapRotation = totalRotation == 90 || totalRotation == 270;
 
+                // If it's NOT rotated, set the rotated width = original width
                 int rotatedWidth = width;
+                // If it's NOT rotated, set the rotated height = original height
                 int rotatedHeight = height;
 
+                // if it IS rotated, set the width = height and the height = width
                 if (swapRotation) {
                     rotatedWidth = height;
                     rotatedHeight = width;
                 }
 
+                // Select the preview size based on the rotated width and height so the preview window is correct
                 myPreviewSize = choosePreviewSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotatedHeight);
 
                 // If cameraID is rear facing, then set current cameraID to our cameraId for use
@@ -338,10 +354,16 @@ public class ASUForia {
         }
     }
 
-
+    /**
+    connectCamera() uses the CameraManager to connect to the camera service provided by Android. Once the camera is
+     connected, the camera is opened using the openCamera() method, which passes the correct CameraID, callback
+     function, and Handler.
+     */
     private void connectCamera() {
+        // Create our CameraManager, which links our Activity to the camera service
         CameraManager cameraManager = (CameraManager) myAct.getSystemService(Context.CAMERA_SERVICE);
         try {
+            // Open the camera
             cameraManager.openCamera(myCameraID, myStateCallback, myBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -349,13 +371,9 @@ public class ASUForia {
     }
 
 
-    private void openCamera() {
-    }
-
-
     /**
      * A simple method closeCamera() will be created to simplify the process needed to close the camera, since the camera
-     * will be closed in multiple methods
+     * will be closed in multiple methods.
      */
     private void closeCamera() {
         // if myCameraDevice is active, then close it
@@ -378,7 +396,11 @@ public class ASUForia {
      * resolution. This is something we could probably just take for granted in this case, but also seems like
      * a good thing to be sure of, and provides more coding practice... We're going to compare the area of the
      * camera resolution and the current preview area to determine if they are compatible. Then we will find a
-     * list of options, and choose the best match.
+     * list of options, and choose the best match. We will also provide methods to choose the preview size to
+     * simplify the process in the setupCamera() method, as well as start the preview, which will use the
+     * capture request builder to give the capture session a target surface to display the preview. We also have
+     * a method to detect the device orientation from the camera sensor orientation to ensure that the camera preview
+     * matches the orientation of the overall device.
      */
     // Setup camera preview resolution based on camera sensor resolution
     private static class compareArea implements Comparator<Size> {
@@ -389,6 +411,7 @@ public class ASUForia {
         }
     }
 
+    // From a list of possible sizes, find which ones are big enough for our display, and select one for use
     private static Size choosePreviewSize(Size[] choices, int width, int height) {
         List<Size> bigEnoughForDisplay = new ArrayList<Size>();
         for (Size option : choices) {
@@ -410,7 +433,12 @@ public class ASUForia {
         }
     }
 
-
+    /**
+    startPreview() uses the CaptureRequestBuilder to create a CaptureSession that will be used to stream images from
+     the camera to the Surface used to display the camera preview images. The CameraCaptureSession has 2 callbacks
+     for onConfigured() and onConfigureFailed(). We define in onConfigured() to setup a continuous request for images
+     using our BackgroundHandler. If the configuration fails, a pop-up message will be displayed.
+     */
     private void startPreview() {
         // Get a  SurfaceTexture object that camera understands from our TextureView to start preview process
         SurfaceTexture surfaceTexture = myTextureView.getSurfaceTexture();
@@ -426,6 +454,7 @@ public class ASUForia {
 
             myCameraDevice.createCaptureSession(Arrays.asList(previewSurface),
                     new CameraCaptureSession.StateCallback() {
+                        // Define what happens when the capture session is correctly configured
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             try {
@@ -438,8 +467,10 @@ public class ASUForia {
                             }
                         }
 
+                        // Define what happens if hte capture session fails
                         @Override
                         public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+                            // Log the error by displaying a short message on the bottom of the screen
                             Toast.makeText(myAct.getApplicationContext(),
                                     "Unable to setup camera preview", Toast.LENGTH_SHORT).show();
                         }
@@ -450,10 +481,13 @@ public class ASUForia {
 
     }
 
-
+    // method to detect device rotation from the camera sensor rotation
     private static int sensorToDeviceRotation(CameraCharacteristics cameraCharacteristics, int deviceOrientation) {
+        // Get camera sensor orientation
         int sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+        // get device orientation
         deviceOrientation = Orientations.get(deviceOrientation);
+        // return usable rotation value based on the camera sensor and device orientations
         return (sensorOrientation + deviceOrientation + 360) % 360;
     }
 
