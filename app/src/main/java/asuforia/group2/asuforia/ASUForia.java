@@ -50,9 +50,7 @@ public class ASUForia {
 
         // Call nativeFeatureDetection() to get features for reference image. Returned reference points need to be saved
         //TODO: Fix this method!
-//        nativeFeatureDetection(referenceImage);
-
-
+        nativeFeatureDetection();
     }
 
 
@@ -557,7 +555,7 @@ public class ASUForia {
     public native String nativePoseEstimation();
 
     // Native method for getting ORB features in OpenCV
-    public native String nativeFeatureDetection(Bitmap referenceImage);
+    public native String nativeFeatureDetection();
 
     public native String nativeCubeDraw();
 
