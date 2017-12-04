@@ -12,12 +12,40 @@
 using namespace cv;
 using namespace std;
 
+int ratioTest(std::vector<std::vector<cv::DMatch> > &matches)
+{
+    float ratio = 0.8;
+    int removed = 0;
+    // for all matches
+    for ( std::vector<std::vector<cv::DMatch> >::iterator
+                  matchIterator= matches.begin(); matchIterator!= matches.end(); ++matchIterator)
+    {
+        // if 2 NN has been identified
+        if (matchIterator->size() > 1)
+        {
+            // check distance ratio
+            __android_log_print(ANDROID_LOG_INFO, "Keypoints", "dist1/dist2: %5.2f/%5.2f = %5.2f compared to %5.2f", (*matchIterator)[0].distance,(*matchIterator)[1].distance,(*matchIterator)[0].distance / (*matchIterator)[1].distance,ratio);
+            if ((*matchIterator)[0].distance / (*matchIterator)[1].distance > ratio)
+            {
+                matchIterator->clear(); // remove match
+                removed++;
+            }
+        }
+        else
+        { // does not have 2 neighbours
+            matchIterator->clear(); // remove match
+            removed++;
+        }
+    }
+    return removed;
+}
+
 extern "C" {
 
 Mat descRef;
 Mat descImage;
 
-JNIEXPORT jstring JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject instance,
                                                             jint height, jint width,
                                                             jobject byteBuffer) {
@@ -35,14 +63,25 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
     detector->detect(frame, kp_image);
 
     extractor->compute(frame, kp_image, descImage);
-    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of camera frame keypoints: ""%i", kp_image.size());
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of camera frame keypoints: %i", kp_image.size());
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "Desc image size: %i", descImage.rows);
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "Desc ref size: %i", descRef.rows);
 
     //FEATURE MATCHING
-    FlannBasedMatcher matcher;
+    FlannBasedMatcher matcher(new flann::LshIndexParams(20, 10, 2));
 
     vector<vector<DMatch>>matches;
+    //descImage.convertTo(descImage, CV_32F);
+    //descRef.convertTo(descRef, CV_32F);
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of matches: ""%i", matches.size());
 
     matcher.knnMatch(descImage,descRef, matches,2);
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of matches: ""%i", matches.size());
+
+    // find distance attribute of matches. If less than some threshold, ignore
+    int removed = ratioTest(matches);
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of matches: ""%i removed: %i", matches.size(), removed);
+
 
     // use solvePnP
 
@@ -50,7 +89,7 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
     // return r and t vecs
 
 
-    return env->NewStringUTF("");
+    return env->NewFloatArray(1);
 }
 
 

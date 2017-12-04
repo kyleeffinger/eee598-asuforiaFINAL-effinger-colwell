@@ -179,9 +179,11 @@ public class ASUForia {
         @Override
         public void onImageAvailable(ImageReader imageReader) {
 
-            Log.d("ImageReader", "onImageAvailable called");
+//            Log.d("ImageReader", "onImageAvailable called");
             // ByteBuffer is what passes the camera image to nativePoseEstimation()
-            ByteBuffer byteBuffer = imageReader.acquireNextImage().getPlanes()[0].getBuffer();
+            Image image = imageReader.acquireLatestImage();
+            ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
+
 
             if (byteBuffer == null) {
                 Log.d("ImageReader", "byteBuffer is null");
@@ -192,6 +194,8 @@ public class ASUForia {
             float[] rtvecs = nativePoseEstimation(myTextureView.getHeight(), myTextureView.getWidth(), byteBuffer);
 
             //TODO: Call PoseListeners callback function, onPose(), passing the R and T vectors
+
+            image.close();
 
         }
     };
@@ -493,8 +497,12 @@ public class ASUForia {
         try {
             myCaptureRequestBuilder = myCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             myCaptureRequestBuilder.addTarget(previewSurface);
+            myCaptureRequestBuilder.addTarget(myImageReader.getSurface());
+            ArrayList<Surface> surfaces = new ArrayList<Surface>();
+            surfaces.add(previewSurface);
+            surfaces.add(myImageReader.getSurface());
 
-            myCameraDevice.createCaptureSession(Arrays.asList(previewSurface),
+            myCameraDevice.createCaptureSession(surfaces,
                     new CameraCaptureSession.StateCallback() {
                         // Define what happens when the capture session is correctly configured
                         @Override
