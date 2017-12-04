@@ -1,17 +1,10 @@
 package asuforia.group2.asuforia;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Surface;
 import android.view.TextureView;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,55 +33,12 @@ public class MainActivity extends AppCompatActivity {
     // Instantiate objects outside of methods for use across multiple callbacks
     ASUForia asuforia;
     TextureView myTextureView;
-    Bitmap bmpIn;
 
     // Define what happens when the application is first opened
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        /**
-         Import reference jpg image as Bitmap (3 lines of code below code based on project 1). Can keep image as Bitmap
-         until it reaches C++ world, then will be converted to Mat for use with OpenCV.
-         */
-        BitmapFactory.Options opts = new BitmapFactory.Options();
-        opts.inPreferredConfig = Bitmap.Config.ARGB_8888; // Each pixel is 4 bytes: Alpha, Red, Green, Blue
-        bmpIn = BitmapFactory.decodeResource(getResources(), R.drawable.referenceimage, opts);
-
-
-
-
-        try{
-            InputStream inStream = getResources().openRawResource(R.raw.referenceimage);
-
-            File cascadeDir = getDir("ref", Context.MODE_PRIVATE);
-            File myReferenceImage = new File(cascadeDir, "referenceImage.jpg");
-
-            FileOutputStream outStream = new FileOutputStream(myReferenceImage);
-
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = inStream.read(buffer)) != -1) {
-                outStream.write(buffer, 0, bytesRead);
-            }
-            inStream.close();
-            outStream.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-
-
-
-
-
-
-
-
 
 
         //TODO: Define PoseListener object to act as interface between ASUForia library and MainActivity
@@ -99,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
                 //TODO: Paint cameraSurface with a cube as an overlay on the marker in the image using OpenCV.
                 asuforia.nativeCubeDraw();
-
 
             }
 
@@ -112,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         Surface cameraSurface = null; // can change to texture if needed
 
         //TODO: Create an ASUForia object
-        asuforia = new ASUForia(myPoseListener, bmpIn, cameraSurface, this);
+        asuforia = new ASUForia(myPoseListener, cameraSurface, this);
        /*
        This function is going to pass bitmap to ASUForia, then ASUForia is linked to native-lib through line at bottom
        "public native String nativeFeatureDetection();". Then, once in C++, Bitmap can be converted to Mat. OpenCV will

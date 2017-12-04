@@ -25,6 +25,10 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,13 +48,39 @@ public class ASUForia {
     }
 
     /*************************************** ASUForia Constructor ***************************************/
-    ASUForia(PoseListener listener_arg, Bitmap referenceImage, Surface cameraSurface, Activity act) {
+    ASUForia(PoseListener listener_arg, Surface cameraSurface, Activity act) {
         mylistener = listener_arg;
         myAct = act;
 
+        try{
+            // openRawResource is public method of getResources() returns type InputStream for non-code assets of the app.
+            InputStream inStream = myAct.getResources().openRawResource(R.raw.referenceimage);
+
+            // create Android directory "ref" to hold reference image
+            File cascadeDir = myAct.getDir("ref", Context.MODE_PRIVATE);
+            myReferenceImage = new File(cascadeDir, "referenceimage.png");
+
+            // Create output stream to write reference image bytes into Android directory location. will be accessible
+            // by myReferenceImage object
+            FileOutputStream outStream = new FileOutputStream(myReferenceImage);
+
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            inStream.close();
+            outStream.close();
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // Call nativeFeatureDetection() to get features for reference image. Returned reference points need to be saved
         //TODO: Fix this method!
-        nativeFeatureDetection();
+        nativeFeatureDetection(myReferenceImage.getAbsolutePath());
     }
 
 
@@ -84,6 +114,9 @@ public class ASUForia {
 
     // Instantiate TextureView object
     private TextureView myTextureView;
+
+    // File object used to access reference image
+    private File myReferenceImage;
 
 
     /*************************************** Begin startEstimation() ************************************/
@@ -144,9 +177,12 @@ public class ASUForia {
         // Define what happens when a new (preview) frame is available from the camera
         @Override
         public void onImageAvailable(ImageReader imageReader) {
-
+            // ByteBuffer is what passes the camera image to nativePoseEstimation()
+            ByteBuffer byteBuffer = imageReader.acquireNextImage().getPlanes()[0].getBuffer();
 
             //TODO: Call nativePoseEstimation() to get rotation and translation (R and T) vectors
+            // pass height and width of TextureView and the camera frame to nativePoseEstimation
+            float[] rtvecs = nativePoseEstimation(myTextureView.getHeight(), myTextureView.getWidth(), byteBuffer);
 
             //TODO: Call PoseListeners callback function, onPose(), passing the R and T vectors
 
@@ -550,12 +586,15 @@ public class ASUForia {
     /**
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application. CALL THESE FUNCTIONS ABOVE
+     * @param height
+     * @param width
+     * @param byteBuffer
      */
     // Native method for pose estimation in OpenCV
-    public native String nativePoseEstimation();
+    public native float[] nativePoseEstimation(int height, int width, ByteBuffer byteBuffer);
 
     // Native method for getting ORB features in OpenCV
-    public native String nativeFeatureDetection();
+    public native String nativeFeatureDetection(String absolutePath);
 
     public native String nativeCubeDraw();
 

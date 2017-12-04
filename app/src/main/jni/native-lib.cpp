@@ -12,15 +12,43 @@
 using namespace cv;
 using namespace std;
 
-
-
-
 extern "C" {
 
-JNIEXPORT jstring JNICALL
-Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject instance) {
+Mat descRef;
+Mat descImage;
 
+JNIEXPORT jstring JNICALL
+Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject instance,
+                                                            jint height, jint width,
+                                                            jobject byteBuffer) {
+
+    Mat _yuv(height + height / 2, width, CV_8UC1, (uchar *) byteBuffer);
+    Mat frame;
+    cvtColor(_yuv, frame, CV_YUV2GRAY_420);
     //TODO: Implement nativePoseEstimation with OpenCV methods
+
+    // detect features in frame
+    Ptr<Feature2D> detector = ORB::create();
+    Ptr<DescriptorExtractor> extractor = ORB::create();
+    vector<KeyPoint> kp_image;
+
+    detector->detect(frame, kp_image);
+
+    extractor->compute(frame, kp_image, descImage);
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of camera frame keypoints: ""%i", kp_image.size());
+
+
+
+    //FEATURE MATCHING
+//    FlannBasedMatcher matcher;
+//
+//    vector<vector<DMatch>>matches;
+//
+//    matcher.knnMatch(img,img2, matches,2);
+
+    // use solvePnP
+
+    // return r and t vecs
 
 
     return env->NewStringUTF("");
@@ -28,89 +56,46 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
 
 
 JNIEXPORT jstring JNICALL
-Java_asuforia_group2_asuforia_ASUForia_nativeFeatureDetection(JNIEnv *env, jobject This, jobject referenceImage) {
+Java_asuforia_group2_asuforia_ASUForia_nativeFeatureDetection(JNIEnv *env, jobject This,
+                                                              jstring referenceImage) {
 
     // TODO: Implement nativeFeatureDetection to extract ORB features from reference image
 
+    const char *refImg = env->GetStringUTFChars(referenceImage, NULL);
+
     //Read the reference image
-    Mat img  = imread("app\\src\\main\\res\\drawable\\referenceimage.png",CV_LOAD_IMAGE_GRAYSCALE);
-    Mat img2 = imread("app\\src\\main\\res\\drawable\\referenceimage.png",CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img = imread(refImg, CV_LOAD_IMAGE_GRAYSCALE);
 
-
-    //wait this is java tho
-    try{
-        InputStream inStream = getResources().openRawResource(R.raw.reference);
-
-
-        File cascadeDir = getDir("ref", Context.MODE_PRIVATE);
-
-
-        File mReferenceImage = new File(cascadeDir, "referenceImage.jpg");
-        FileOutputStream outStream = new FileOutputStream(mReferenceImage);
-
-
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = inStream.read(buffer)) != -1) {
-            outStream.write(buffer, 0, bytesRead);
-        }
-
-
-        inStream.close();
-        outStream.close();
-
-
-    }
-    catch (Exception e) {
-        e.printStackTrace();
-    }
-
-    imread("Testing",mReferenceImage.getAbsolutePath());
-
-
-
-
-        imshow("Example", img);
     Mat outputImage;
 
+    __android_log_print(ANDROID_LOG_INFO, "Mat", "%s", refImg);
 
-    if(&img != NULL)
-        __android_log_print(ANDROID_LOG_INFO, "Mat", "Image Loaded");
-    else
+
+    if (img.empty())
         __android_log_print(ANDROID_LOG_INFO, "Mat", "Image NOT Loaded");
-
-    if(&img2 != NULL)
-        __android_log_print(ANDROID_LOG_INFO, "Mat", "Image Loaded");
     else
-        __android_log_print(ANDROID_LOG_INFO, "Mat", "Image NOT Loaded");
+        __android_log_print(ANDROID_LOG_INFO, "Mat", "Image Loaded");
 
-
-    //FEATURE DESCRIPTORS IMAGE 1
-    Mat descriptors11;
-    Mat descriptors12;
-
-    //FEATURE DESCRIPTORS IMAGE 2
-    Mat descriptors21;
-    Mat descriptors22;
-
-
-    //Ptr<FeatureDetector> detector = ORB::create();
     Ptr<Feature2D> detector = ORB::create();
     Ptr<DescriptorExtractor> extractor = ORB::create();
-    vector<KeyPoint> kp;
-    vector<KeyPoint> kp2;
+    vector<KeyPoint> kp_ref;
 
-    detector->detect(img,kp);
+    detector->detect(img, kp_ref);
 
-    extractor->compute(img,kp,descriptors11);
-    extractor->compute(img,kp2,descriptors12);
+    extractor->compute(img, kp_ref, descRef);
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of reference image keypoints: " "%i", kp_ref.size());
+    // __android_log_print(ANDROID_LOG_INFO, "Mat", "%s", descriptors11);
 
-    //FEATURE MATCHING
-    FlannBasedMatcher matcher;
+    return env->NewStringUTF("");
+}
 
-    vector<vector<DMatch>>matches;
 
-    matcher.knnMatch(img,img2, matches,2);
+
+JNIEXPORT jstring JNICALL
+Java_asuforia_group2_asuforia_ASUForia_nativeCubeDraw(JNIEnv *env, jobject instance) {
+
+    // TODO
+
 
     return env->NewStringUTF("");
 }
