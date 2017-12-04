@@ -6,10 +6,12 @@
 #include "features.h"
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
-
+#include <iostream>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
+
 
 
 
@@ -31,8 +33,44 @@ Java_asuforia_group2_asuforia_ASUForia_nativeFeatureDetection(JNIEnv *env, jobje
     // TODO: Implement nativeFeatureDetection to extract ORB features from reference image
 
     //Read the reference image
-    Mat img  = imread("C:\\Users\\Zachary\\AndroidStudioProjects\\eee598-asuforiaFINAL-effinger-colwell\\app\\src\\main\\res\\drawable\\referenceimage.png",CV_LOAD_IMAGE_GRAYSCALE);
-    Mat img2 = imread("C:\\Users\\Zachary\\AndroidStudioProjects\\eee598-asuforiaFINAL-effinger-colwell\\app\\src\\main\\res\\drawable\\referenceimage2.png",CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img  = imread("app\\src\\main\\res\\drawable\\referenceimage.png",CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img2 = imread("app\\src\\main\\res\\drawable\\referenceimage.png",CV_LOAD_IMAGE_GRAYSCALE);
+
+
+    //wait this is java tho
+    try{
+        InputStream inStream = getResources().openRawResource(R.raw.reference);
+
+
+        File cascadeDir = getDir("ref", Context.MODE_PRIVATE);
+
+
+        File mReferenceImage = new File(cascadeDir, "referenceImage.jpg");
+        FileOutputStream outStream = new FileOutputStream(mReferenceImage);
+
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, bytesRead);
+        }
+
+
+        inStream.close();
+        outStream.close();
+
+
+    }
+    catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    imread("Testing",mReferenceImage.getAbsolutePath());
+
+
+
+
+        imshow("Example", img);
     Mat outputImage;
 
 
@@ -73,7 +111,6 @@ Java_asuforia_group2_asuforia_ASUForia_nativeFeatureDetection(JNIEnv *env, jobje
     vector<vector<DMatch>>matches;
 
     matcher.knnMatch(img,img2, matches,2);
-
 
     return env->NewStringUTF("");
 }

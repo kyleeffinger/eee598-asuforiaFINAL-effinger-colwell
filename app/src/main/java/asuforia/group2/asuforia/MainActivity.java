@@ -1,5 +1,6 @@
 package asuforia.group2.asuforia;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
@@ -7,6 +8,10 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Surface;
 import android.view.TextureView;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,6 +55,41 @@ public class MainActivity extends AppCompatActivity {
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inPreferredConfig = Bitmap.Config.ARGB_8888; // Each pixel is 4 bytes: Alpha, Red, Green, Blue
         bmpIn = BitmapFactory.decodeResource(getResources(), R.drawable.referenceimage, opts);
+
+
+
+
+        try{
+            InputStream inStream = getResources().openRawResource(R.raw.referenceimage);
+
+            File cascadeDir = getDir("ref", Context.MODE_PRIVATE);
+            File myReferenceImage = new File(cascadeDir, "referenceImage.jpg");
+
+            FileOutputStream outStream = new FileOutputStream(myReferenceImage);
+
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            inStream.close();
+            outStream.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+
+
+
+
+
+
+
+
 
         //TODO: Define PoseListener object to act as interface between ASUForia library and MainActivity
         final ASUForia.PoseListener myPoseListener = new ASUForia.PoseListener() {
