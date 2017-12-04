@@ -557,6 +557,8 @@ public class ASUForia {
     // Native method for getting ORB features in OpenCV
     public native String nativeFeatureDetection();
 
+    public native String nativeCubeDraw();
+
 
 
 }

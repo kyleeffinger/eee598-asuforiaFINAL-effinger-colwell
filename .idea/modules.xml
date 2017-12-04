@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/asuforia.iml" filepath="$PROJECT_DIR$/asuforia.iml" />
       <module fileurl="file://C:\Users\Zachary\AndroidStudioProjects\eee598-asuforiaFINAL-effinger-colwell\asuforia.iml" filepath="C:\Users\Zachary\AndroidStudioProjects\eee598-asuforiaFINAL-effinger-colwell\asuforia.iml" />
       <module fileurl="file://$PROJECT_DIR$/eee598-asuforiaFINAL-effinger-colwell.iml" filepath="$PROJECT_DIR$/eee598-asuforiaFINAL-effinger-colwell.iml" />
     </modules>
