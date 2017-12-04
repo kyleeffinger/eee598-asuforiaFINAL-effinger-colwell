@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         final ASUForia.PoseListener myPoseListener = new ASUForia.PoseListener() {
 
             //TODO: Define PoseListener callback function, onPose() which will use OpenCV to draw cube on image
+//            @Override
             public void onPose(Image cameraFrame, float[] rvec, float[] tvec) {
 
                 //TODO: Paint cameraSurface with a cube as an overlay on the marker in the image using OpenCV.

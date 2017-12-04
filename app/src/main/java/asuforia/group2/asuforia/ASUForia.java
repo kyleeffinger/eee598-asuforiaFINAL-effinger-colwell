@@ -16,6 +16,7 @@ import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.OrientationEventListener;
@@ -116,6 +117,8 @@ public class ASUForia {
     // File object used to access reference image
     private File myReferenceImage;
 
+    private ImageReader myImageReader;
+
 
     /*************************************** Begin startEstimation() ************************************/
 
@@ -175,8 +178,14 @@ public class ASUForia {
         // Define what happens when a new (preview) frame is available from the camera
         @Override
         public void onImageAvailable(ImageReader imageReader) {
+
+            Log.d("ImageReader", "onImageAvailable called");
             // ByteBuffer is what passes the camera image to nativePoseEstimation()
             ByteBuffer byteBuffer = imageReader.acquireNextImage().getPlanes()[0].getBuffer();
+
+            if (byteBuffer == null) {
+                Log.d("ImageReader", "byteBuffer is null");
+            }
 
             //TODO: Call nativePoseEstimation() to get rotation and translation (R and T) vectors
             // pass height and width of TextureView and the camera frame to nativePoseEstimation
@@ -348,11 +357,12 @@ public class ASUForia {
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
                 // Use ImageReader class to create a new ImageReader instance and set the size and format of the image
-                ImageReader myImageReader = ImageReader.newInstance(myTextureView.getWidth(), myTextureView.getHeight(),
+                myImageReader = ImageReader.newInstance(myTextureView.getWidth(), myTextureView.getHeight(),
                         ImageFormat.YUV_420_888, 2);
 
                 // connect our ImageReader to our ImageAvailableListener and Handler
                 myImageReader.setOnImageAvailableListener(myImageAvailableListener, myBackgroundHandler);
+                Log.d("ImageReader", "onImageAvailableListener set to myImageAvailableListener");
 
                 // Get device orientation
                 int deviceOrientation = myAct.getWindowManager().getDefaultDisplay().getRotation();
