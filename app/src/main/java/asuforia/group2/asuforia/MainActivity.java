@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
             public void onPose(Image cameraFrame, float[] rvec, float[] tvec) {
 
                 //TODO: Paint cameraSurface with a cube as an overlay on the marker in the image using OpenCV.
+                asuforia.nativeCubeDraw();
 
 
             }
