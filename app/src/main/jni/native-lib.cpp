@@ -37,16 +37,15 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
     extractor->compute(frame, kp_image, descImage);
     __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of camera frame keypoints: ""%i", kp_image.size());
 
-
-
     //FEATURE MATCHING
-//    FlannBasedMatcher matcher;
-//
-//    vector<vector<DMatch>>matches;
-//
-//    matcher.knnMatch(img,img2, matches,2);
+    FlannBasedMatcher matcher;
+
+    vector<vector<DMatch>>matches;
+
+    matcher.knnMatch(descImage,descRef, matches,2);
 
     // use solvePnP
+
 
     // return r and t vecs
 
@@ -65,8 +64,6 @@ Java_asuforia_group2_asuforia_ASUForia_nativeFeatureDetection(JNIEnv *env, jobje
 
     //Read the reference image
     Mat img = imread(refImg, CV_LOAD_IMAGE_GRAYSCALE);
-
-    Mat outputImage;
 
     __android_log_print(ANDROID_LOG_INFO, "Mat", "%s", refImg);
 
@@ -95,6 +92,7 @@ JNIEXPORT jstring JNICALL
 Java_asuforia_group2_asuforia_ASUForia_nativeCubeDraw(JNIEnv *env, jobject instance) {
 
     // TODO
+    __android_log_print(ANDROID_LOG_INFO, "Keypoints", "Testing ");
 
 
     return env->NewStringUTF("");
