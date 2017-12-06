@@ -24,7 +24,10 @@ int ratioTest(std::vector<std::vector<cv::DMatch> > &matches)
         if (matchIterator->size() > 1)
         {
             // check distance ratio
-            __android_log_print(ANDROID_LOG_INFO, "Keypoints", "dist1/dist2: %5.2f/%5.2f = %5.2f compared to %5.2f", (*matchIterator)[0].distance,(*matchIterator)[1].distance,(*matchIterator)[0].distance / (*matchIterator)[1].distance,ratio);
+            __android_log_print(ANDROID_LOG_INFO, "Keypoints", "dist1/dist2: %5.2f/%5.2f = %5.2f compared to %5.2f",
+                                (*matchIterator)[0].distance,(*matchIterator)[1].distance,
+                                (*matchIterator)[0].distance / (*matchIterator)[1].distance,ratio);
+
             if ((*matchIterator)[0].distance / (*matchIterator)[1].distance > ratio)
             {
                 matchIterator->clear(); // remove match
@@ -44,6 +47,8 @@ extern "C" {
 
 Mat descRef;
 Mat descImage;
+vector<KeyPoint> kp_ref;
+vector<KeyPoint> kp_image;
 
 JNIEXPORT jfloatArray JNICALL
 Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject instance,
@@ -58,7 +63,7 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
     // detect features in frame
     Ptr<Feature2D> detector = ORB::create();
     Ptr<DescriptorExtractor> extractor = ORB::create();
-    vector<KeyPoint> kp_image;
+//    vector<KeyPoint> kp_image;
 
     detector->detect(frame, kp_image);
 
@@ -68,11 +73,15 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
     __android_log_print(ANDROID_LOG_INFO, "Keypoints", "Desc ref size: %i", descRef.rows);
 
     //FEATURE MATCHING
-    FlannBasedMatcher matcher(new flann::LshIndexParams(20, 10, 2));
+    Ptr<flann::IndexParams> indexParams = makePtr<flann::LshIndexParams>(6,12,1);
+    Ptr<flann::SearchParams> searchParams = makePtr<flann::SearchParams>(50);
+    DescriptorMatcher * matcher1 = new FlannBasedMatcher(indexParams, searchParams);
+
+    FlannBasedMatcher matcher; //(new flann::LshIndexParams(6, 12, 1));
 
     vector<vector<DMatch>>matches;
-    //descImage.convertTo(descImage, CV_32F);
-    //descRef.convertTo(descRef, CV_32F);
+    descImage.convertTo(descImage, CV_32F);
+    descRef.convertTo(descRef, CV_32F);
     __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of matches: ""%i", matches.size());
 
     matcher.knnMatch(descImage,descRef, matches,2);
@@ -82,8 +91,66 @@ Java_asuforia_group2_asuforia_ASUForia_nativePoseEstimation(JNIEnv *env, jobject
     int removed = ratioTest(matches);
     __android_log_print(ANDROID_LOG_INFO, "Keypoints", "# of matches: ""%i removed: %i", matches.size(), removed);
 
+    // generate 2D/3D correspondance for solve PnPRansac method
+    vector<Point3f> list_points_3d_match;
+    vector<Point2f> list_points_2d_match;
 
-    // use solvePnP
+//    Point3f point3d_model =
+//
+//
+//    // use solvePnPRansac
+//
+//    // Ransac parameters
+    int iterationsCount = 500;
+    float projectionError = 2.0;
+    float confidence = 0.95;
+
+    Mat distCoeffs = Mat::zeros(4,1,CV_64FC1);
+    Mat rvec = Mat::zeros(3,1, CV_64FC1);
+    Mat tvec = Mat::zeros(3,1, CV_64FC1);
+
+    bool useExtrinsicGuess = false;
+
+    const _InputArray cameraMatrix;
+
+    solvePnP(kp_ref, kp_image, cameraMatrix ,distCoeffs, rvec, tvec, useExtrinsicGuess);
+//
+//
+//
+//    //instantiate Rvec, Tvec and RTvec
+//    //Rvec and Tvec will always contain 3 elements there RTvec will contain 6
+//    float * Rvec = new float[3];
+//    float * Tvec = new float[3];
+//    float * RTvec = new float[6];
+//
+//    //Rvec itself is returned from solvePnP
+//    //This data is just for example
+//    //The same goes for Tvec
+//    Rvec[0] = 1;
+//    Rvec[1] = 2;
+//    Rvec[2] = 3;
+//
+//    Tvec[0] = 4;
+//    Tvec[1] = 5;
+//    Tvec[2] = 6;
+//
+//    //In order to return the R and T vecs from a C++ function we must
+//    //bring them together in a single array which will be passed
+//    //as a pointer to Java
+//    RTvec[0] = Rvec[0];
+//    RTvec[1] = Rvec[1];
+//    RTvec[2] = Rvec[2];
+//    RTvec[3] = Tvec[0];
+//    RTvec[4] = Tvec[1];
+//    RTvec[5] = Tvec[2];
+//
+//    //Printing to make sure it works
+//    for(int i = 0; i<6;i++)
+//    {
+//        cout << RTvec[i] << endl;
+//    }
+
+
 
 
     // return r and t vecs
@@ -114,7 +181,7 @@ Java_asuforia_group2_asuforia_ASUForia_nativeFeatureDetection(JNIEnv *env, jobje
 
     Ptr<Feature2D> detector = ORB::create();
     Ptr<DescriptorExtractor> extractor = ORB::create();
-    vector<KeyPoint> kp_ref;
+//    vector<KeyPoint> kp_ref;
 
     detector->detect(img, kp_ref);
 
