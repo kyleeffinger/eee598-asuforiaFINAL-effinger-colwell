@@ -57,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
 
         //TODO: Implement this in C++ - nativeFeatureDetection()
 
-        // This will probably need to be Texture instead of Surface since we are using TextureView. "Whatever it needs
-        // to be for it to work is fine" -Robert
         Surface cameraSurface = null; // can change to texture if needed
 
         //TODO: Create an ASUForia object
