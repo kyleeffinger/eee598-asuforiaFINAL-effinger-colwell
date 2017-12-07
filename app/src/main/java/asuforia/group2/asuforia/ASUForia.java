@@ -78,7 +78,6 @@ public class ASUForia {
         }
 
         // Call nativeFeatureDetection() to get features for reference image. Returned reference points need to be saved
-        //TODO: Fix this method!
         nativeFeatureDetection(myReferenceImage.getAbsolutePath());
     }
 
@@ -612,6 +611,7 @@ public class ASUForia {
     // Native method for getting ORB features in OpenCV
     public native String nativeFeatureDetection(String absolutePath);
 
+    // Native method for drawing the cube in the camera preview frame using OpenCV
     public native String nativeCubeDraw();
 
 
